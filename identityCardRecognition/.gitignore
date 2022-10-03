@@ -1,0 +1,13 @@
+*.pyc
+*.swp
+*.pkl
+
+result*
+output*
+craft*
+__pycache__*
+tc*
+*.json
+tc*
+outputs*
+
