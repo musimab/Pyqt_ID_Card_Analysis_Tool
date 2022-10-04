@@ -74,7 +74,7 @@ class DisplayImageWidget(QWidget):
         plt.show()
         self.ax3.set_axis_off()
         
-    
+
     def displayMaskImage(self, image, img_name):
         self.mask_img = image
         self.ax4.set_title(img_name)
@@ -82,6 +82,13 @@ class DisplayImageWidget(QWidget):
         self.ax4.set_axis_off()
         plt.show()
         self.canvas.draw()
+    
+    def displayFaceImage(self, image, img_name):
+        self.heatmap_img = image
+        self.ax5.set_title(img_name)
+        self.ax5.imshow(image)
+        plt.show()
+        self.ax5.set_axis_off()
     
     def displayMatchedImage(self, image, img_name, new_bboxes):
         for box in new_bboxes:

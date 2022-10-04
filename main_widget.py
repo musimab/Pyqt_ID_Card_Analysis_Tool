@@ -87,7 +87,7 @@ class IdCardPhotoAnalyser(QMainWindow):
         
         ### Algorithm Parameters ####
         neighbor_box_distance = 60
-        face_recognition = 'ssd'
+        face_recognition = 'dlib'
         ocr_method = 'EasyOcr'
         rotation_interval = 60
         ORI_THRESH = 3 # Orientation angle threshold for skew correction
@@ -120,7 +120,8 @@ class IdCardPhotoAnalyser(QMainWindow):
         self.ocrWorker.imshowMaskImage.connect(self.display_image_widget.displayMaskImage)
         self.ocrWorker.imshowMatchedImage.connect(self.display_image_widget.displayMatchedImage)
         self.ocrWorker.sendOcrOutput.connect(self.ocr_output_widget.receiveOcrOutputs)
-        
+        self.ocrWorker.imshowFaceImage.connect(self.display_image_widget.displayFaceImage)
+        self.ocrWorker.imshowFaceImage.connect(self.ocr_output_widget.set_face_map_to_label)
         self.threadOcr.start()
         
 

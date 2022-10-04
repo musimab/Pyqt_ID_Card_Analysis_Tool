@@ -19,9 +19,17 @@ class FaceDetector(ABC):
     def rotate_bound(self,image, angle):
         pass
 
+    @abstractmethod
+    def cropFace(self, image):
+        pass
 
-class DlibFaceDetector(FaceDetector):        
-    
+
+class DlibFaceDetector(FaceDetector):
+    def __init__(self) -> None:
+        super().__init__()
+        self.predictor = dlib.shape_predictor("identityCardRecognition/model/shape_predictor_68_face_landmarks.dat")      
+        self.detector = dlib.get_frontal_face_detector()
+
     def changeOrientationUntilFaceFound(self, image, rot_interval):
         
         img = image.copy()
@@ -40,15 +48,22 @@ class DlibFaceDetector(FaceDetector):
 
     def findFace(self, image):
         
-        detector = dlib.get_frontal_face_detector()
-        
-        predictor = dlib.shape_predictor("identityCardRecognition/model/shape_predictor_68_face_landmarks.dat")
-        faces = detector(image)
+        faces = self.detector(image)
         num_of_faces = len(faces)
         print("Dlib Number of Faces:", num_of_faces )
         if(num_of_faces):
             return True
         return False
+    
+    def cropFace(self, image):
+        rects = self.detector(image)
+        for bbox in rects:
+            x1 = bbox.left()
+            y1 = bbox.top()
+            x2 = bbox.right()
+            y2 = bbox.bottom()
+
+        return image[y1 :y2, x1:x2]
     
     
     def rotate_bound(self, image, angle):
@@ -88,9 +103,12 @@ class SsdFaceDetector(FaceDetector):
         img = image.copy()
         face_conf = []
         
+        
         for angle in range(0, 360, rot_interval):
             img_rotated = self.rotate_bound(img, angle)
-            face_conf.append((self.findFace(img_rotated), angle))
+            confidence_score = self.findFace(img_rotated)
+            face_conf.append((confidence_score, angle))
+            
 
         face_confidence = np.array(face_conf)
         face_arg_max = np.argmax(face_confidence, axis=0)
@@ -113,12 +131,19 @@ class SsdFaceDetector(FaceDetector):
         FaceNet.setInput(blob)
         faces = FaceNet.forward()
         
+        
         for i in range(faces.shape[2]):
             confidence = faces[0, 0, i, 2]
             if confidence > 0.6:
+                # compute the (x, y)-coordinates of the bounding box for the object
+                box = faces[0, 0, i, 3:7] * np.array([w, h, w, h])
+                
                 #print("Confidence:", confidence)
                 return confidence
             return 0
+    
+    def cropFace(self, image):
+        pass
     
     
     def rotate_bound(self,image, angle):
@@ -173,6 +198,10 @@ class HaarFaceDetector(FaceDetector):
             return True
         
         return False
+    
+    def cropFace(self, image):
+        pass
+        
             
         
     def rotate_bound(self,image, angle):

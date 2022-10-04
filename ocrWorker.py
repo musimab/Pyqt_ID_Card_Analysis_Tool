@@ -37,6 +37,7 @@ class OcrWorker(QObject):
     imshowHeatMapImage  = pyqtSignal(object, object)
     imshowMaskImage     = pyqtSignal(object, object)
     imshowMatchedImage  = pyqtSignal(object, object, object)
+    imshowFaceImage     = pyqtSignal(object, object)
     sendOcrOutput = pyqtSignal(object)
 
     def __init__(self, segmentation_model, nearestBox ,face_detector,Image2Text, data_path):
@@ -88,14 +89,19 @@ class OcrWorker(QObject):
         self.imshowOriginalImage.emit(img1, "Original Image")
         
         final_img = findFaceID.changeOrientationUntilFaceFound(img1, rotation_interval)
-            
+        
         if(final_img is None):
             print(f"No face detected in identity card {1}")
             return 
 
         final_img = utlis.correctPerspective(final_img)
+        ### crop face image
+        face_cord_in = findFaceID.cropFace(final_img)
+        self.imshowFaceImage.emit(face_cord_in, "Face")
+        #print("face cord in ", face_cord_in)
 
-        self.imshowRotatedImage.emit(final_img, "Rotated Image")
+         ## Send cropped image to mpl widget
+        self.imshowRotatedImage.emit(final_img, "Warped Image")
         
         txt_heat_map, regions = utlis.createHeatMapAndBoxCoordinates(final_img)
             
@@ -106,6 +112,7 @@ class OcrWorker(QObject):
             
         predicted_mask = self.model.predict(txt_heat_map)
         
+        ## Send Unet output mask to mpl widget
         self.imshowMaskImage.emit(predicted_mask, "Mask Image")
 
         orientation_angle = utlis.findOrientationofLines(predicted_mask.copy())
