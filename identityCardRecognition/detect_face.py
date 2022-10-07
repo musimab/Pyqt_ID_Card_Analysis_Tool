@@ -161,7 +161,7 @@ class SsdFaceDetector(FaceDetector):
 class HaarFaceDetector(FaceDetector):
     def __init__(self) -> None:
         super().__init__()
-        self.  face_cascade = cv2.CascadeClassifier('identityCardRecognition/model/haarcascade_frontalface_default.xml')
+        self.face_cascade = cv2.CascadeClassifier('identityCardRecognition/model/haarcascade_frontalface_default.xml')
 
     
     def changeOrientationUntilFaceFound(self,image, rot_interval):
@@ -193,9 +193,10 @@ class HaarFaceDetector(FaceDetector):
     def cropFace(self, img):
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         rects = self.face_cascade.detectMultiScale(gray, 1.3, 5)
+        print(rects)
         if(not len(rects)):
             return 
-        (x, y, w, h)  = rects
+        (x, y, w, h)  = rects[0]
         
         return img[y:y+h, x:x+w]
         

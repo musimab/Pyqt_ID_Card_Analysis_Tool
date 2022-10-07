@@ -86,10 +86,11 @@ class IdCardPhotoAnalyser(QMainWindow):
         
         
         ### Algorithm Parameters ####
-        neighbor_box_distance = 60
-        face_recognition = 'dlib'
-        ocr_method = 'EasyOcr'
-        rotation_interval = 60
+        neighbor_box_distance = self.ocr_parameters_widget.get_neigbor_search_box_distance()
+        face_recognition = self.ocr_parameters_widget.get_face_recognition_model()
+        ocr_method = self.ocr_parameters_widget.get_ocr_model()
+     
+        rotation_interval = self.ocr_parameters_widget.get_rotation_interval()
         ORI_THRESH = 3 # Orientation angle threshold for skew correction
         
         use_cuda = "cuda" if torch.cuda.is_available() else "cpu"
@@ -98,8 +99,8 @@ class IdCardPhotoAnalyser(QMainWindow):
         nearestBox = NearestBox(distance_thresh = neighbor_box_distance, draw_line=False)
         face_detector = detect_face.face_factory(face_model = face_recognition)
         findFaceID = face_detector.get_face_detector()
-        #Image2Text = extract_words.ocr_factory(ocr_method = args.ocr_method, border_thresh=3, denoise = False)
-        Image2Text =  OcrFactory().select_ocr_method(ocr_method = ocr_method, border_thresh=3, denoise = False)
+        Image2Text = extract_words.ocr_factory(ocr_method = ocr_method, border_thresh=3, denoise = False)
+        #Image2Text =  OcrFactory().select_ocr_method(ocr_method = ocr_method, border_thresh=3, denoise = False)
         
         start = time.time()
         end = 0
@@ -124,6 +125,8 @@ class IdCardPhotoAnalyser(QMainWindow):
         self.ocrWorker.imshowFaceImage.connect(self.ocr_output_widget.set_face_map_to_label)
         self.threadOcr.start()
         
+        end = time.time()
+        print("Time:", end- start)
 
 
 

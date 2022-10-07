@@ -167,6 +167,7 @@ class OcrFactory:
     def select_ocr_method(ocr_method,  border_thresh = 3, denoise = False):
         
         if(ocr_method == "EasyOcr"):
+            print("ocr method easy ocr selected")
             return EasyOcr(border_thresh, denoise)
         
         if(ocr_method == "TesseractOcr"):
@@ -175,7 +176,7 @@ class OcrFactory:
         return -1
 
 
-def ocr_factory(ocr_method = "EasyOcr", border_thresh = 3, denoise = False):
+def ocr_factory(ocr_method , border_thresh = 3, denoise = False):
     
     ocr_factory = {
                     "EasyOcr": EasyOcr,
