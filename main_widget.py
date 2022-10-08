@@ -40,6 +40,7 @@ class IdCardPhotoAnalyser(QMainWindow):
         self.setWindowState(Qt.WindowMaximized)
         self.setWindowTitle("Icon")
         self.threadOcr = QThread()
+        
 
         self.sample_image_selection_widget = ImageSearchFolderWidget()
         self.display_image_widget = DisplayImageWidget()
@@ -80,7 +81,9 @@ class IdCardPhotoAnalyser(QMainWindow):
     def makeSignalSlotConnection(self):
 
         self.sample_image_selection_widget.sendImageNameandPath.connect(self.getDataPathandItem)
-       
+    
+    def NoFaceDetected(self):
+        QMessageBox.about(self, "Warning", "No Face Detected")
     
     def getDataPathandItem(self,data_path, data_item):
         
@@ -123,6 +126,8 @@ class IdCardPhotoAnalyser(QMainWindow):
         self.ocrWorker.sendOcrOutput.connect(self.ocr_output_widget.receiveOcrOutputs)
         self.ocrWorker.imshowFaceImage.connect(self.display_image_widget.displayFaceImage)
         self.ocrWorker.imshowFaceImage.connect(self.ocr_output_widget.set_face_map_to_label)
+        self.ocrWorker.sendNoFaceDetectedSignal.connect(self.NoFaceDetected)
+        self.ocrWorker.sendOrientationAngleSignal.connect(self.ocr_output_widget.receiveOrientationAngleofIdCard)
         self.threadOcr.start()
         
         end = time.time()

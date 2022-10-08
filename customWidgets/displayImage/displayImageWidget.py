@@ -27,6 +27,7 @@ class DisplayImageWidget(QWidget):
         self.heatmap_img = None
         self.mask_img = None
         self.final_img = None
+        self.face_img = None
 
         gs = self.figure.add_gridspec(3,5)
         self.ax1 = self.figure.add_subplot(gs[0,0])
@@ -42,14 +43,14 @@ class DisplayImageWidget(QWidget):
         self.canvas.mpl_connect('button_press_event', self.draw_seperate_figure)
         
         self.setLayout(vertical_layout)
-        #self.show()
+     
         
     
     def make_signal_slot_connections(self):
         pass
 
     def displayOriginalImage(self, image, img_name):
-        print("Original Image########################")
+        
         self.orig_img = image
         self.ax1.set_title(img_name)
         self.ax1.imshow(image)
@@ -59,7 +60,7 @@ class DisplayImageWidget(QWidget):
         
     
     def displayRotatedImage(self, image, img_name):
-        print("Rotated Image########################")
+        
         self.rotated_img = image
         self.ax2.set_title(img_name)
         self.ax2.imshow(image)
@@ -84,7 +85,7 @@ class DisplayImageWidget(QWidget):
         self.canvas.draw()
     
     def displayFaceImage(self, image, img_name):
-        self.heatmap_img = image
+        self.face_img = image
         self.ax5.set_title(img_name)
         self.ax5.imshow(image)
         plt.show()
@@ -106,7 +107,9 @@ class DisplayImageWidget(QWidget):
         self.canvas.draw()
     
     
- 
+    """
+    Show figure as a seperated image in matplotlib function
+    """
     def draw_seperate_figure(self, event):
 
         if event.inaxes and event.dblclick:
@@ -136,7 +139,7 @@ class DisplayImageWidget(QWidget):
 
             elif plotIndex  == 4:
                 fig, ax = plt.subplots(figsize=(16, 16))
-                ax.imshow(self.orig_img)
+                ax.imshow(self.face_img)
                 ax.set_axis_off()
             elif plotIndex  == 5:
                 fig, ax = plt.subplots(figsize=(16, 16))

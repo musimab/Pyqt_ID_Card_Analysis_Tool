@@ -39,6 +39,8 @@ class OcrWorker(QObject):
     imshowMatchedImage  = pyqtSignal(object, object, object)
     imshowFaceImage     = pyqtSignal(object, object)
     sendOcrOutput = pyqtSignal(object)
+    sendNoFaceDetectedSignal = pyqtSignal()
+    sendOrientationAngleSignal = pyqtSignal(object)
 
     def __init__(self, segmentation_model, nearestBox ,face_detector,Image2Text, data_path):
         super().__init__()
@@ -70,10 +72,8 @@ class OcrWorker(QObject):
         
 
         ### Algorithm Parameters ####
-        neighbor_box_distance = 60
-        face_recognition = 'ssd'
-        ocr_method = 'EasyOcr'
-        rotation_interval = 60
+
+        rotation_interval = self.ocr_parameters_widget.get_rotation_interval()
         ORI_THRESH = 3 # Orientation angle threshold for skew correction
 
         findFaceID = self.face_detector.get_face_detector()
@@ -84,17 +84,19 @@ class OcrWorker(QObject):
             
         img = cv2.imread(self.data_path)
         img1 = cv2.cvtColor(img , cv2.COLOR_BGR2RGB)
-        print("Thread Image########################")
+        
         
         self.imshowOriginalImage.emit(img1, "Original Image")
         
         final_img = findFaceID.changeOrientationUntilFaceFound(img1, rotation_interval)
         
         if(final_img is None):
-            print(f"No face detected in identity card {1}")
+            self.sendNoFaceDetectedSignal.emit()
+            self.ocr_finished_signal.emit()
             return 
 
         final_img = utlis.correctPerspective(final_img)
+        
         ### crop face image
         face_cord_in = findFaceID.cropFace(final_img)
         self.imshowFaceImage.emit(face_cord_in, "Face")
@@ -116,11 +118,12 @@ class OcrWorker(QObject):
         self.imshowMaskImage.emit(predicted_mask, "Mask Image")
 
         orientation_angle = utlis.findOrientationofLines(predicted_mask.copy())
-        print("Orientation of Tc ID Card is {} ".format(orientation_angle))
+        ## Send orientation angle of id card to ocr output widget
+        self.sendOrientationAngleSignal.emit(orientation_angle)
             
         if ( abs(orientation_angle) > ORI_THRESH ):
                 
-            print("Absulute orientation_angle is greater than {}".format(ORI_THRESH)  )
+            #print("Absulute orientation_angle is greater than {}".format(ORI_THRESH)  )
 
             final_img = utlis.rotateImage(orientation_angle, final_img)
 
@@ -146,10 +149,7 @@ class OcrWorker(QObject):
         PersonInfo = self.Image2Text.ocrOutput(self.data_path, final_img, new_bboxes)
 
         self.sendOcrOutput.emit(PersonInfo)
-        print(" ")
-        for id, val in PersonInfo.items():
-            print(id,':' ,val)
-        print(" ")
+
         end = time.time()
 
         

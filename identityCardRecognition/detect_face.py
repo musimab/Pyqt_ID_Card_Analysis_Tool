@@ -63,7 +63,6 @@ class DlibFaceDetector(FaceDetector):
             if(is_face_available):
                 return img_rotated
         
-
         return None
 
     def findFace(self, image):
@@ -111,11 +110,15 @@ class SsdFaceDetector(FaceDetector):
 
         face_confidence = np.array(face_conf)
         face_arg_max = np.argmax(face_confidence, axis=0)
-        angle_max = face_confidence[face_arg_max[0]][1]
-
-        rotated_img = self.rotate_bound(image, angle_max)
+        ## check if there is no face in image 
+        if(face_confidence[face_arg_max[0]][0] != 0):
+  
+            angle_max = face_confidence[face_arg_max[0]][1]
+            
+            rotated_img = self.rotate_bound(image, angle_max)
+            return rotated_img
         
-        return rotated_img
+        return None
     
     def findFace(self,img):
         
@@ -196,6 +199,7 @@ class HaarFaceDetector(FaceDetector):
         print(rects)
         if(not len(rects)):
             return 
+            
         (x, y, w, h)  = rects[0]
         
         return img[y:y+h, x:x+w]

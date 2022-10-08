@@ -32,7 +32,7 @@ class OcrParametersWidget(QWidget):
         pass
 
     def init_face_recognition_models(self):
-        face_models = ["dlib", "haar", "ssd"]
+        face_models = ["ssd", "dlib", "haar"]
         self.ui.comboBox_face_detection_model.addItems( face_models )
     
     def init_segmentation_models(self):

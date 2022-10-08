@@ -33,6 +33,9 @@ class OcrOutputWidget(QWidget):
         self.ui.lineEdit_name.setText(PersonInfo["Name"])
         self.ui.lineEdit_surname.setText(PersonInfo["Surname"])
         self.ui.lineEdit_date_of_birth.setText(PersonInfo["DateofBirth"])
+    
+    def receiveOrientationAngleofIdCard(self, angle):
+        print("Orientation angle of card: ", angle)
 
     def set_face_map_to_label(self, cvImg):
         if len(cvImg.shape)<3:
