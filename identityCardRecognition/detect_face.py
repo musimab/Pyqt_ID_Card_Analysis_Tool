@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from tkinter.tix import Y_REGION
 import cv2
 import numpy as np
 import dlib
@@ -75,6 +76,8 @@ class DlibFaceDetector(FaceDetector):
         return False
     
     def cropFace(self, image):
+        Y_EDGE_THRESH = 35
+        X_EDGE_THRESH = 15
         rects = self.detector(image)
         for bbox in rects:
             x1 = bbox.left()
@@ -82,7 +85,7 @@ class DlibFaceDetector(FaceDetector):
             x2 = bbox.right()
             y2 = bbox.bottom()
 
-        return image[y1 :y2, x1:x2]
+        return image[y1-Y_EDGE_THRESH :y2+Y_EDGE_THRESH, x1-X_EDGE_THRESH:x2+X_EDGE_THRESH]
     
 
 class SsdFaceDetector(FaceDetector):
@@ -140,6 +143,8 @@ class SsdFaceDetector(FaceDetector):
             return 0
     
     def cropFace(self, img):
+        Y_EDGE_THRESH = 35
+        X_EDGE_THRESH = 15
         h, w = img.shape[:2]
         blob = cv2.dnn.blobFromImage(cv2.resize(img, (300, 300)), 1.0,
         (300, 300), (104.0, 117.0, 123.0))
@@ -156,7 +161,7 @@ class SsdFaceDetector(FaceDetector):
                 
                 #print("Confidence:", confidence)
             
-            return img[y1:y2, x1:x2]
+            return img[y1-Y_EDGE_THRESH:y2+Y_EDGE_THRESH, x1-X_EDGE_THRESH:x2+X_EDGE_THRESH]
         
         return None
     
@@ -194,15 +199,16 @@ class HaarFaceDetector(FaceDetector):
         return False
     
     def cropFace(self, img):
+        Y_EDGE_THRESH = 35
+        X_EDGE_THRESH = 15
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         rects = self.face_cascade.detectMultiScale(gray, 1.3, 5)
-        print(rects)
         if(not len(rects)):
-            return 
+            return None
             
         (x, y, w, h)  = rects[0]
         
-        return img[y:y+h, x:x+w]
+        return img[y-Y_EDGE_THRESH:y+h+Y_EDGE_THRESH, x-X_EDGE_THRESH:x+w+X_EDGE_THRESH]
         
             
         

@@ -160,7 +160,7 @@ class OcrWorker(QObject):
             
         #utlis.displayAllBoxes(final_img, bbox_coordinates)
         
-
+        print("Time in seconds:",end -start)
         self.ocr_finished_signal.emit()
 
 

@@ -105,8 +105,7 @@ class IdCardPhotoAnalyser(QMainWindow):
         Image2Text = extract_words.ocr_factory(ocr_method = ocr_method, border_thresh=3, denoise = False)
         #Image2Text =  OcrFactory().select_ocr_method(ocr_method = ocr_method, border_thresh=3, denoise = False)
         
-        start = time.time()
-        end = 0
+
         ############################ Start Threading ################################3
         
         self.ocrWorker = OcrWorker(model, nearestBox, face_detector,Image2Text, data_path)
@@ -128,10 +127,13 @@ class IdCardPhotoAnalyser(QMainWindow):
         self.ocrWorker.imshowFaceImage.connect(self.ocr_output_widget.set_face_map_to_label)
         self.ocrWorker.sendNoFaceDetectedSignal.connect(self.NoFaceDetected)
         self.ocrWorker.sendOrientationAngleSignal.connect(self.ocr_output_widget.receiveOrientationAngleofIdCard)
+        
+        message_to_ui = "ocr method: "+ str(ocr_method)  + "face detection: " + str(face_recognition)
+        self.ui.statusbar.showMessage(message_to_ui,5000)
         self.threadOcr.start()
         
-        end = time.time()
-        print("Time:", end- start)
+        
+        
 
 
 

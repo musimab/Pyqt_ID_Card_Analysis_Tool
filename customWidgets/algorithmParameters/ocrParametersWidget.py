@@ -8,7 +8,7 @@ from PyQt5.QtCore import pyqtSignal, Qt, QThread, QSize
 from os import listdir
 from os.path import isfile, join
 
-from customWidgets.algorithmParameters.ocrParametersWidget_python import Ui_Form
+from customWidgets.algorithmParameters.ocrParametersWidget_ui import Ui_Form
 
 import cv2
 
