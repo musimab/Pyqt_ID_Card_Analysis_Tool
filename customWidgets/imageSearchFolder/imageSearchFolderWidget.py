@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import (
     QAction, QFileDialog, QTableWidgetItem, QMessageBox, QMenu, QScrollBar, QTabWidget, QSizePolicy, QDockWidget
 )
 from PyQt5.QtGui import QIntValidator, QDoubleValidator, QCursor
-from PyQt5.QtCore import pyqtSignal, Qt, QThread, QSize
+from PyQt5.QtCore import pyqtSignal, Qt, QThread, QSize,pyqtSlot
 from os import listdir
 from os.path import isfile, join
 
@@ -35,8 +35,10 @@ class ImageSearchFolderWidget(QWidget):
     
     def make_signal_slot_connections(self):
         self.ui.pushButton_open_folder.clicked.connect(self.open_test_folder_slot)
-        self.ui.tableWidget.cellClicked[int, int].connect(self.table_widget_cell_activated)
-
+        #self.ui.tableWidget.cellClicked[int, int].connect(self.table_widget_cell_activated)
+        self.ui.tableWidget.cellClicked.connect(self.table_widget_cell_activated)
+    
+    @pyqtSlot()
     def open_test_folder_slot(self):
         self.data_folder_path = QFileDialog.getExistingDirectory(self, 'Select Folder')
         self.ui.lineEdit_folder_path.setText(self.data_folder_path)
@@ -71,6 +73,7 @@ class ImageSearchFolderWidget(QWidget):
         self.ui.tableWidget.horizontalHeader().setStretchLastSection(True)
         self.initialize_table_configurations()
 
+    @pyqtSlot(int,int)
     def table_widget_cell_activated(self, row, column):
 
         data_item = self.ui.tableWidget.item(row, column).text()
@@ -79,35 +82,3 @@ class ImageSearchFolderWidget(QWidget):
 
         data_path = self.data_folder_path + "/" + data_item
         self.sendImageNameandPath.emit(data_path, data_item)
-
-        #print("test path:", data_path)
-
-        #self.threadTest = QThread()
-        #self.testWorker = TestWorker(test_path, data_item, self.model, self.signalParams, self.filter_params)
-
-        #self.testWorker.moveToThread(self.threadTest)
-        #self.send_sample_name_info2test_worker.emit(test_path, data_item)
-        #if not self.is_training_done:
-            #QMessageBox.about(self, "Warning", "Please Train the model")
-            # ret = QMessageBox.question(self, 'MessageBox', "Please Train the model", QMessageBox.Yes | QMessageBox.Cancel)
-        #    pass
-        #else:
-            #self.ground_balance_test_model(test_path, data_item)
-        #    print("sending smple info")
-        #    self.send_sample_name_info2test_worker.emit(test_path, data_item)
-        #    pass
-
-            # Thread class
-        """ 
-            self.thread.started.connect(self.testWorker.run)
-
-
-            self.testWorker.test_finished_signal.connect(self.thread.quit)
-            self.testWorker.test_finished_signal.connect(self.testWorker.deleteLater)
-            self.thread.finished.connect(self.thread.deleteLater)
-            self.testWorker.test_error_signal.connect(self.ui.mplWidget.update_graph_test_error)
-            self.testWorker.s_parameters_update_signal.connect(self.ui.mplWidget.update_graph_s_parameters)
-
-            self.thread.start()
-        """
-

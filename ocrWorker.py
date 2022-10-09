@@ -31,18 +31,19 @@ from identityCardRecognition import detect_face
 
 
 class OcrWorker(QObject):
+
     ocr_finished_signal = pyqtSignal()
-    imshowOriginalImage = pyqtSignal(object, object)
+    
     imshowRotatedImage  = pyqtSignal(object, object)
     imshowHeatMapImage  = pyqtSignal(object, object)
     imshowMaskImage     = pyqtSignal(object, object)
     imshowMatchedImage  = pyqtSignal(object, object, object)
-    imshowFaceImage     = pyqtSignal(object, object)
+    #imshowFaceImage     = pyqtSignal(object, object)
     sendOcrOutput = pyqtSignal(object)
     sendNoFaceDetectedSignal = pyqtSignal()
     sendOrientationAngleSignal = pyqtSignal(object)
 
-    def __init__(self, segmentation_model, nearestBox ,face_detector,Image2Text, data_path):
+    def __init__(self, segmentation_model, nearestBox ,Image2Text, final_img):
         super().__init__()
 
         #self.sample_image_selection_widget = ImageSearchFolderWidget()
@@ -52,57 +53,45 @@ class OcrWorker(QObject):
 
         self.model = segmentation_model
         self.nearestBox = nearestBox
-        self.face_detector = face_detector
+        self.final_img = final_img
         self.Image2Text = Image2Text
-        self.data_path = data_path
+    
         #self.makeSignalSlotConnection()
+    
+    def get_final_image(self):
+        return self.final_img
         
- 
-
-    def makeSignalSlotConnection(self):
-        
-        self.imshowOriginalImage.connect(self.display_image_widget.displayOriginalImage)
-        self.imshowRotatedImage.connect(self.display_image_widget.displayRotatedImage)
-        self.imshowHeatMapImage.connect(self.display_image_widget.displayHeatMapImage)
-        self.imshowMaskImage.connect(self.display_image_widget.displayMaskImage)
-        self.imshowMatchedImage.connect(self.display_image_widget.displayMatchedImage)
-        self.sendOcrOutput.connect(self.ocr_output_widget.receiveOcrOutputs)
-
     def run(self):
         
 
         ### Algorithm Parameters ####
 
-        rotation_interval = self.ocr_parameters_widget.get_rotation_interval()
+        
         ORI_THRESH = 3 # Orientation angle threshold for skew correction
 
-        findFaceID = self.face_detector.get_face_detector()
+    
 
         start = time.time()
         end = 0
         
-            
-        img = cv2.imread(self.data_path)
-        img1 = cv2.cvtColor(img , cv2.COLOR_BGR2RGB)
         
+        #self.imshowOriginalImage.emit(img1, "Original Image")
         
-        self.imshowOriginalImage.emit(img1, "Original Image")
-        
-        final_img = findFaceID.changeOrientationUntilFaceFound(img1, rotation_interval)
-        
+        final_img = self.get_final_image()
         if(final_img is None):
             self.sendNoFaceDetectedSignal.emit()
             self.ocr_finished_signal.emit()
             return 
 
-        final_img = utlis.correctPerspective(final_img)
+       
         
         ### crop face image
-        face_cord_in = findFaceID.cropFace(final_img)
-        self.imshowFaceImage.emit(face_cord_in, "Face")
-        #print("face cord in ", face_cord_in)
+        
+        #face_cord_in = findFaceID.cropFace(final_img)
+        #self.imshowFaceImage.emit(face_cord_in, "Face")
+        
 
-         ## Send cropped image to mpl widget
+        ## Send cropped image to mpl widget
         self.imshowRotatedImage.emit(final_img, "Warped Image")
         
         txt_heat_map, regions = utlis.createHeatMapAndBoxCoordinates(final_img)
@@ -146,7 +135,7 @@ class OcrWorker(QObject):
             
         new_bboxes = self.nearestBox.searchNearestBoundingBoxes(bbox_coordinates, matched_box_indexes, final_img)
         
-        PersonInfo = self.Image2Text.ocrOutput(self.data_path, final_img, new_bboxes)
+        PersonInfo = self.Image2Text.ocrOutput(final_img, new_bboxes)
 
         self.sendOcrOutput.emit(PersonInfo)
 

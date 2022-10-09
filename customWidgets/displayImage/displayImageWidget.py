@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import (
     QAction, QFileDialog, QTableWidgetItem, QMessageBox, QMenu, QScrollBar, QTabWidget, QSizePolicy, QDockWidget
 )
 from PyQt5.QtGui import QIntValidator, QDoubleValidator, QCursor
-from PyQt5.QtCore import pyqtSignal, Qt, QThread, QSize,QEvent
+from PyQt5.QtCore import pyqtSignal, Qt, QThread, QSize,QEvent, pyqtSlot
 from os import listdir
 from os.path import isfile, join
 from matplotlib.backends.backend_qt5agg import FigureCanvas
@@ -49,6 +49,7 @@ class DisplayImageWidget(QWidget):
     def make_signal_slot_connections(self):
         pass
 
+    @pyqtSlot(object, object)
     def displayOriginalImage(self, image, img_name):
         
         self.orig_img = image
@@ -58,7 +59,7 @@ class DisplayImageWidget(QWidget):
         self.ax1.set_axis_off()
         #self.show()
         
-    
+    @pyqtSlot(object, object)
     def displayRotatedImage(self, image, img_name):
         
         self.rotated_img = image
@@ -68,6 +69,7 @@ class DisplayImageWidget(QWidget):
         self.ax2.set_axis_off()
         self.canvas.draw()
     
+    @pyqtSlot(object, object)
     def displayHeatMapImage(self, image, img_name):
         self.heatmap_img = image
         self.ax3.set_title(img_name)
@@ -75,7 +77,7 @@ class DisplayImageWidget(QWidget):
         plt.show()
         self.ax3.set_axis_off()
         
-
+    @pyqtSlot(object, object)
     def displayMaskImage(self, image, img_name):
         self.mask_img = image
         self.ax4.set_title(img_name)
@@ -83,14 +85,16 @@ class DisplayImageWidget(QWidget):
         self.ax4.set_axis_off()
         plt.show()
         self.canvas.draw()
-    
+
+    @pyqtSlot(object, object)
     def displayFaceImage(self, image, img_name):
         self.face_img = image
         self.ax5.set_title(img_name)
         self.ax5.imshow(image)
         plt.show()
         self.ax5.set_axis_off()
-    
+
+    @pyqtSlot(object, object,object)
     def displayMatchedImage(self, image, img_name, new_bboxes):
         for box in new_bboxes:
             x1, w, y1, h = box
@@ -110,6 +114,7 @@ class DisplayImageWidget(QWidget):
     """
     Show figure as a seperated image in matplotlib function
     """
+    @pyqtSlot()
     def draw_seperate_figure(self, event):
 
         if event.inaxes and event.dblclick:

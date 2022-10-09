@@ -113,14 +113,13 @@ class EasyOcr(OcrMethod):
         self.denoise = denoise
         self.BORDER_THRSH = border_thresh
     
-    def ocrOutput(self, img_name, img, bbox):
+    def ocrOutput(self, img, bbox):
         """
         it saves the txt outputs as a json format
         """
         crop_img_names = self.cropRoi(img, bbox, self.denoise)
     
         id_infos= ["Tc", "Surname", "Name", "DateofBirth"]
-        jsonData = JsonData()
         text_output = {"Tc":"", "Surname":"", "Name":"", "DateofBirth":""}
         for info, img  in zip(id_infos, crop_img_names):
             result = self.reader.readtext(img)
@@ -129,9 +128,6 @@ class EasyOcr(OcrMethod):
                 text_output[info] = text.upper()
         
         text_output["DateofBirth"] = self.getonlyDigits(text_output["DateofBirth"])
-       
-        CardInfo[img_name] = text_output
-        jsonData.saveDict(CardInfo)
         
         return text_output 
 
@@ -141,13 +137,13 @@ class TesseractOcr(OcrMethod):
         self.denoise = denoise
         self.BORDER_THRSH = border_thresh
         
-    def ocrOutput(self, img_name, img, bbox):
+    def ocrOutput(self, img, bbox):
         """
         it saves the txt outputs as a json format
         """
         crop_img_names = self.cropRoi(img, bbox, self.denoise)
         id_infos= ["Tc", "Surname", "Name", "DateofBirth"]
-        jsonData = JsonData()        
+
         text_output = {"Tc":"", "Surname":"", "Name":"", "DateofBirth":""}
         for info, img  in zip(id_infos, crop_img_names):
             text = pytesseract.image_to_string(img)
@@ -155,9 +151,6 @@ class TesseractOcr(OcrMethod):
             text_output[info] = text.upper()
         
         text_output["DateofBirth"] = self.getonlyDigits(text_output["DateofBirth"])
-       
-        CardInfo[img_name] = text_output
-        jsonData.saveDict(CardInfo)
         
         return text_output
 

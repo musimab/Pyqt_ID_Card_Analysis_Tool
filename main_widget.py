@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (
     QAction, QFileDialog, QTableWidgetItem, QMessageBox, QMenu, QScrollBar, QTabWidget, QSizePolicy, QDockWidget
 )
 from PyQt5.QtGui import QIntValidator, QDoubleValidator, QCursor
-from PyQt5.QtCore import pyqtSignal, Qt, QThread, QSize
+from PyQt5.QtCore import pyqtSignal, Qt, QThread, QSize,pyqtSlot,QRunnable, QThreadPool
 
 
 from main_window_ui import Ui_MainWindow
@@ -29,6 +29,8 @@ import time
 import argparse
 from identityCardRecognition import detect_face
 from ocrWorker import OcrWorker
+from faceDetectWorker import FaceDetectWorker
+import concurrent.futures
 
 class IdCardPhotoAnalyser(QMainWindow):
 
@@ -40,6 +42,8 @@ class IdCardPhotoAnalyser(QMainWindow):
         self.setWindowState(Qt.WindowMaximized)
         self.setWindowTitle("Icon")
         self.threadOcr = QThread()
+
+        self.threadpool = QThreadPool()
         
 
         self.sample_image_selection_widget = ImageSearchFolderWidget()
@@ -82,33 +86,34 @@ class IdCardPhotoAnalyser(QMainWindow):
 
         self.sample_image_selection_widget.sendImageNameandPath.connect(self.getDataPathandItem)
     
+    @pyqtSlot()
     def NoFaceDetected(self):
         QMessageBox.about(self, "Warning", "No Face Detected")
     
-    def getDataPathandItem(self,data_path, data_item):
+    def thread_complete(self):
+        print("THREAD COMPLETE!")
+
+    def print_output(self, result_img):
         
-        
+        ############################ Start Ocr Worker Threading ################################
         ### Algorithm Parameters ####
         neighbor_box_distance = self.ocr_parameters_widget.get_neigbor_search_box_distance()
-        face_recognition = self.ocr_parameters_widget.get_face_recognition_model()
+        
         ocr_method = self.ocr_parameters_widget.get_ocr_model()
-     
-        rotation_interval = self.ocr_parameters_widget.get_rotation_interval()
+        
         ORI_THRESH = 3 # Orientation angle threshold for skew correction
         
         use_cuda = "cuda" if torch.cuda.is_available() else "cpu"
+        print("use cuda", use_cuda)
+        self.ui.statusbar.showMessage(use_cuda )
         
         model = UnetModel(Res34BackBone(), use_cuda)
         nearestBox = NearestBox(distance_thresh = neighbor_box_distance, draw_line=False)
-        face_detector = detect_face.face_factory(face_model = face_recognition)
-        findFaceID = face_detector.get_face_detector()
+
         Image2Text = extract_words.ocr_factory(ocr_method = ocr_method, border_thresh=3, denoise = False)
         #Image2Text =  OcrFactory().select_ocr_method(ocr_method = ocr_method, border_thresh=3, denoise = False)
         
-
-        ############################ Start Threading ################################3
-        
-        self.ocrWorker = OcrWorker(model, nearestBox, face_detector,Image2Text, data_path)
+        self.ocrWorker = OcrWorker(model, nearestBox,  Image2Text, result_img)
         self.ocrWorker.moveToThread(self.threadOcr)
 
         self.threadOcr.started.connect(self.ocrWorker.run)
@@ -117,24 +122,45 @@ class IdCardPhotoAnalyser(QMainWindow):
         self.ocrWorker.ocr_finished_signal.connect(self.ocrWorker.deleteLater)
         #self.threadOcr.finished.connect(self.threadOcr.deleteLater)
 
-        self.ocrWorker.imshowOriginalImage.connect(self.display_image_widget.displayOriginalImage)
+        #self.ocrWorker.imshowOriginalImage.connect(self.display_image_widget.displayOriginalImage)
         self.ocrWorker.imshowRotatedImage.connect(self.display_image_widget.displayRotatedImage)
         self.ocrWorker.imshowHeatMapImage.connect(self.display_image_widget.displayHeatMapImage)
         self.ocrWorker.imshowMaskImage.connect(self.display_image_widget.displayMaskImage)
         self.ocrWorker.imshowMatchedImage.connect(self.display_image_widget.displayMatchedImage)
         self.ocrWorker.sendOcrOutput.connect(self.ocr_output_widget.receiveOcrOutputs)
-        self.ocrWorker.imshowFaceImage.connect(self.display_image_widget.displayFaceImage)
-        self.ocrWorker.imshowFaceImage.connect(self.ocr_output_widget.set_face_map_to_label)
+        #self.ocrWorker.imshowFaceImage.connect(self.display_image_widget.displayFaceImage)
+        #self.ocrWorker.imshowFaceImage.connect(self.ocr_output_widget.set_face_map_to_label)
         self.ocrWorker.sendNoFaceDetectedSignal.connect(self.NoFaceDetected)
         self.ocrWorker.sendOrientationAngleSignal.connect(self.ocr_output_widget.receiveOrientationAngleofIdCard)
-        
-        message_to_ui = "ocr method: "+ str(ocr_method)  + "face detection: " + str(face_recognition)
-        self.ui.statusbar.showMessage(message_to_ui,5000)
+            
+        message_to_ui = "ocr method: "+ str(ocr_method) 
+        self.ui.statusbar.showMessage(message_to_ui,6000)
         self.threadOcr.start()
         
+    
+    @pyqtSlot(object, object)
+    def getDataPathandItem(self,data_path, data_item):
         
+        face_recognition = self.ocr_parameters_widget.get_face_recognition_model()
+        rotation_interval = self.ocr_parameters_widget.get_rotation_interval()
+        face_detector = detect_face.face_factory(face_model = face_recognition)
+        findFaceID = face_detector.get_face_detector()
         
+        ############################# Start Face Detector Thread ####################
+        img = cv2.imread(data_path)
+        img1 = cv2.cvtColor(img , cv2.COLOR_BGR2RGB)
 
+        faceDetectWorker = FaceDetectWorker(findFaceID, img1, rotation_interval)
+        faceDetectWorker.signals.result.connect(self.print_output)
+        faceDetectWorker.signals.finished.connect(self.thread_complete)
+        faceDetectWorker.signals.imshowOriginalImage.connect(self.display_image_widget.displayOriginalImage)
+        faceDetectWorker.signals.imshowFaceImage.connect(self.display_image_widget.displayFaceImage)
+        faceDetectWorker.signals.imshowFaceImage.connect(self.ocr_output_widget.set_face_map_to_label)
+        faceDetectWorker.signals.sendNoFaceDetectedSignal.connect(self.NoFaceDetected)
+        #faceDetectWorker.signals.progress.connect(self.progress_fn)
+        # Execute
+        self.threadpool.start(faceDetectWorker)
+        
 
 
 app = QApplication([])
