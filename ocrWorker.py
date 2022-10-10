@@ -33,12 +33,10 @@ from identityCardRecognition import detect_face
 class OcrWorker(QObject):
 
     ocr_finished_signal = pyqtSignal()
-    
     imshowRotatedImage  = pyqtSignal(object, object)
     imshowHeatMapImage  = pyqtSignal(object, object)
     imshowMaskImage     = pyqtSignal(object, object)
     imshowMatchedImage  = pyqtSignal(object, object, object)
-    #imshowFaceImage     = pyqtSignal(object, object)
     sendOcrOutput = pyqtSignal(object)
     sendNoFaceDetectedSignal = pyqtSignal()
     sendOrientationAngleSignal = pyqtSignal(object)
@@ -56,26 +54,16 @@ class OcrWorker(QObject):
         self.final_img = final_img
         self.Image2Text = Image2Text
     
-        #self.makeSignalSlotConnection()
     
     def get_final_image(self):
         return self.final_img
         
     def run(self):
-        
 
-        ### Algorithm Parameters ####
-
-        
         ORI_THRESH = 3 # Orientation angle threshold for skew correction
-
-    
-
         start = time.time()
         end = 0
         
-        
-        #self.imshowOriginalImage.emit(img1, "Original Image")
         
         final_img = self.get_final_image()
         if(final_img is None):

@@ -79,13 +79,16 @@ class DlibFaceDetector(FaceDetector):
         Y_EDGE_THRESH = 35
         X_EDGE_THRESH = 15
         rects = self.detector(image)
-        for bbox in rects:
-            x1 = bbox.left()
-            y1 = bbox.top()
-            x2 = bbox.right()
-            y2 = bbox.bottom()
+        if(len(rects)):
+            for bbox in rects:
+                x1 = bbox.left()
+                y1 = bbox.top()
+                x2 = bbox.right()
+                y2 = bbox.bottom()
 
-        return image[y1-Y_EDGE_THRESH :y2+Y_EDGE_THRESH, x1-X_EDGE_THRESH:x2+X_EDGE_THRESH]
+            return image[y1-Y_EDGE_THRESH :y2+Y_EDGE_THRESH, x1-X_EDGE_THRESH:x2+X_EDGE_THRESH]
+        
+        return None
     
 
 class SsdFaceDetector(FaceDetector):
@@ -203,12 +206,15 @@ class HaarFaceDetector(FaceDetector):
         X_EDGE_THRESH = 15
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         rects = self.face_cascade.detectMultiScale(gray, 1.3, 5)
-        if(not len(rects)):
-            return None
-            
-        (x, y, w, h)  = rects[0]
+        if(len(rects)):
+            (x, y, w, h)  = rects[0]
+            return img[y-Y_EDGE_THRESH:y+h+Y_EDGE_THRESH, x-X_EDGE_THRESH:x+w+X_EDGE_THRESH]
         
-        return img[y-Y_EDGE_THRESH:y+h+Y_EDGE_THRESH, x-X_EDGE_THRESH:x+w+X_EDGE_THRESH]
+        return None
+            
+        
+        
+        
         
             
         

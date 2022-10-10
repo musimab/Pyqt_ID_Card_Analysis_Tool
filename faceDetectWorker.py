@@ -11,7 +11,6 @@ class WorkerSignals(QObject):
     Defines the signals available from a running worker thread.
     Supported signals are:
     - finished: No data
-    - error:`tuple` (exctype, value, traceback.format_exc() )
     - result: `object` data returned from processing, anything
     - progress: `tuple` indicating progress metadata
     '''
@@ -19,6 +18,7 @@ class WorkerSignals(QObject):
     result = pyqtSignal(object)
     imshowOriginalImage = pyqtSignal(object, object)
     imshowFaceImage     = pyqtSignal(object, object)
+    imshowRotatedImage  = pyqtSignal(object, object)
     sendNoFaceDetectedSignal = pyqtSignal()
     #progress = pyqtSignal(tuple)
 
@@ -50,14 +50,21 @@ class FaceDetectWorker(QRunnable):
         self.signals.imshowOriginalImage.emit(self.img, "original image")
         
         result = self.fn.changeOrientationUntilFaceFound(self.img, self.rotation_interval)
+        
         if(result is None):
             self.signals.finished.emit() 
             self.signals.sendNoFaceDetectedSignal.emit()
             return
+        
         final_img = utlis.correctPerspective(result)
+
         
         self.signals.result.emit(final_img)  # Return the result of the processing
 
+        ## Send cropped image to mpl widget
+        self.signals.imshowRotatedImage.emit(final_img, "Warped Image")
+        
+        ## Crop face image and send to mpl widget
         face_cord_in =  self.fn.cropFace(final_img)
         self.signals.imshowFaceImage.emit(face_cord_in, "Face")
         

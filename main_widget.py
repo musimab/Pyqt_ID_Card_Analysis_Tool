@@ -84,18 +84,20 @@ class IdCardPhotoAnalyser(QMainWindow):
 
     def makeSignalSlotConnection(self):
 
-        self.sample_image_selection_widget.sendImageNameandPath.connect(self.getDataPathandItem)
+        self.sample_image_selection_widget.sendImageNameandPath.connect(self.startFaceWorkerProcess)
     
     @pyqtSlot()
-    def NoFaceDetected(self):
+    def noFaceDetected(self):
         QMessageBox.about(self, "Warning", "No Face Detected")
     
+    @pyqtSlot()
     def thread_complete(self):
-        print("THREAD COMPLETE!")
+        self.ui.statusbar.showMessage("Faceworker completed", 3000)
 
-    def print_output(self, result_img):
+    def startOcrWorkerProcess(self, result_img):
         
         ############################ Start Ocr Worker Threading ################################
+
         ### Algorithm Parameters ####
         neighbor_box_distance = self.ocr_parameters_widget.get_neigbor_search_box_distance()
         
@@ -122,15 +124,11 @@ class IdCardPhotoAnalyser(QMainWindow):
         self.ocrWorker.ocr_finished_signal.connect(self.ocrWorker.deleteLater)
         #self.threadOcr.finished.connect(self.threadOcr.deleteLater)
 
-        #self.ocrWorker.imshowOriginalImage.connect(self.display_image_widget.displayOriginalImage)
-        self.ocrWorker.imshowRotatedImage.connect(self.display_image_widget.displayRotatedImage)
         self.ocrWorker.imshowHeatMapImage.connect(self.display_image_widget.displayHeatMapImage)
         self.ocrWorker.imshowMaskImage.connect(self.display_image_widget.displayMaskImage)
         self.ocrWorker.imshowMatchedImage.connect(self.display_image_widget.displayMatchedImage)
         self.ocrWorker.sendOcrOutput.connect(self.ocr_output_widget.receiveOcrOutputs)
-        #self.ocrWorker.imshowFaceImage.connect(self.display_image_widget.displayFaceImage)
-        #self.ocrWorker.imshowFaceImage.connect(self.ocr_output_widget.set_face_map_to_label)
-        self.ocrWorker.sendNoFaceDetectedSignal.connect(self.NoFaceDetected)
+        self.ocrWorker.sendNoFaceDetectedSignal.connect(self.noFaceDetected)
         self.ocrWorker.sendOrientationAngleSignal.connect(self.ocr_output_widget.receiveOrientationAngleofIdCard)
             
         message_to_ui = "ocr method: "+ str(ocr_method) 
@@ -139,7 +137,7 @@ class IdCardPhotoAnalyser(QMainWindow):
         
     
     @pyqtSlot(object, object)
-    def getDataPathandItem(self,data_path, data_item):
+    def startFaceWorkerProcess(self,data_path, data_item):
         
         face_recognition = self.ocr_parameters_widget.get_face_recognition_model()
         rotation_interval = self.ocr_parameters_widget.get_rotation_interval()
@@ -151,12 +149,14 @@ class IdCardPhotoAnalyser(QMainWindow):
         img1 = cv2.cvtColor(img , cv2.COLOR_BGR2RGB)
 
         faceDetectWorker = FaceDetectWorker(findFaceID, img1, rotation_interval)
-        faceDetectWorker.signals.result.connect(self.print_output)
+        faceDetectWorker.signals.result.connect(self.startOcrWorkerProcess)
         faceDetectWorker.signals.finished.connect(self.thread_complete)
         faceDetectWorker.signals.imshowOriginalImage.connect(self.display_image_widget.displayOriginalImage)
         faceDetectWorker.signals.imshowFaceImage.connect(self.display_image_widget.displayFaceImage)
+        faceDetectWorker.signals.imshowRotatedImage.connect(self.display_image_widget.displayRotatedImage)
         faceDetectWorker.signals.imshowFaceImage.connect(self.ocr_output_widget.set_face_map_to_label)
-        faceDetectWorker.signals.sendNoFaceDetectedSignal.connect(self.NoFaceDetected)
+        faceDetectWorker.signals.sendNoFaceDetectedSignal.connect(self.noFaceDetected)
+
         #faceDetectWorker.signals.progress.connect(self.progress_fn)
         # Execute
         self.threadpool.start(faceDetectWorker)

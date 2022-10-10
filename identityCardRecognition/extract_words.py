@@ -10,37 +10,11 @@ import os
 from abc import ABC
 
 """
-    There are 2 types of ocr methods. 
-    Retrieves original image and target box coordinates 
-    (id no, first name, last name, date of birth) 
-    and saves txt outputs in json format
+There are 2 types of ocr methods. 
+Retrieves original image and target box coordinates 
+(id no, first name, last name, date of birth) 
+and saves txt outputs in json format
 """
-
-CardInfo = {}
-
-
-
-class JsonData:
-
-    def __init__(self) -> None:
-        
-        self.text_output = {}
-        self.data_path = 'test/predictions_json'
-        self.dict_path = self.data_path +  '/data.json'
-        if not os.path.exists(self.data_path):
-            os.makedirs(self.data_path)
-
-    def saveDict(self, dict_name):
-        
-        with open(self.dict_path, 'w', encoding='utf-8') as fp:
-            json.dump(dict_name, fp, ensure_ascii = False)
-    
-    def loadDict(self):
-        
-        with open(self.dict_path, 'r', encoding='utf-8') as fp:
-            data = json.load(fp)
-            print(data)
-    
 
 class Ocr(ABC):
     
@@ -153,6 +127,7 @@ class TesseractOcr(OcrMethod):
         text_output["DateofBirth"] = self.getonlyDigits(text_output["DateofBirth"])
         
         return text_output
+
 
 class OcrFactory:
     
