@@ -72,16 +72,6 @@ class OcrWorker(QObject):
             return 
 
        
-        
-        ### crop face image
-        
-        #face_cord_in = findFaceID.cropFace(final_img)
-        #self.imshowFaceImage.emit(face_cord_in, "Face")
-        
-
-        ## Send cropped image to mpl widget
-        self.imshowRotatedImage.emit(final_img, "Warped Image")
-        
         txt_heat_map, regions = utlis.createHeatMapAndBoxCoordinates(final_img)
             
         txt_heat_map = cv2.cvtColor(txt_heat_map, cv2.COLOR_BGR2RGB)

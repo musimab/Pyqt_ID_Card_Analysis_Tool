@@ -64,11 +64,13 @@ class OcrOutputWidget(QWidget):
         text_output["Surname"]    = surname
         text_output["Name"]       = name
         text_output["DateofBirth"]= dbirth
+        
+        return text_output
     
     def saveOcrResuls(self):
 
         text_output = self.getIdCardInformation()
-        with open('ocr_data.json', 'w', encoding='utf-8') as fp:
+        with open('ocr_result_data.json', 'w', encoding='utf-8') as fp:
             json.dump(text_output, fp, ensure_ascii = False)
         
 
