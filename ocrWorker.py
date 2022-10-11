@@ -37,17 +37,13 @@ class OcrWorker(QObject):
     imshowHeatMapImage  = pyqtSignal(object, object)
     imshowMaskImage     = pyqtSignal(object, object)
     imshowMatchedImage  = pyqtSignal(object, object, object)
+    imshowAllBoxImage  = pyqtSignal(object, object, object)
     sendOcrOutput = pyqtSignal(object)
     sendNoFaceDetectedSignal = pyqtSignal()
     sendOrientationAngleSignal = pyqtSignal(object)
 
     def __init__(self, segmentation_model, nearestBox ,Image2Text, final_img):
         super().__init__()
-
-        #self.sample_image_selection_widget = ImageSearchFolderWidget()
-        self.display_image_widget = DisplayImageWidget()
-        self.ocr_output_widget = OcrOutputWidget()
-        self.ocr_parameters_widget = OcrParametersWidget()
 
         self.model = segmentation_model
         self.nearestBox = nearestBox
@@ -119,13 +115,9 @@ class OcrWorker(QObject):
 
         end = time.time()
 
-        
-        
-        #utlis.displayMachedBoxes(final_img, new_bboxes)
-
         self.imshowMatchedImage.emit(final_img, "Final Image", new_bboxes)
             
-        #utlis.displayAllBoxes(final_img, bbox_coordinates)
+        self.imshowAllBoxImage.emit(final_img, "All text Box Image", bbox_coordinates)
         
         print("Time in seconds:",end -start)
         self.ocr_finished_signal.emit()

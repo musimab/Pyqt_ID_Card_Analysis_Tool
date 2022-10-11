@@ -41,6 +41,7 @@ class IdCardPhotoAnalyser(QMainWindow):
         self.ui.setupUi(self)
         self.setWindowState(Qt.WindowMaximized)
         self.setWindowTitle("Icon")
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.threadOcr = QThread()
 
         self.threadpool = QThreadPool()
@@ -81,10 +82,36 @@ class IdCardPhotoAnalyser(QMainWindow):
         ocr_result_dockwidget.setWidget(parameters_widget_tab)
 
         self.addDockWidget(Qt.RightDockWidgetArea, ocr_result_dockwidget)
+    
+   
+    def context_menu_method(self, pos):
+        
+        custom_menu = QMenu(self)
+
+        clear_submenu = QMenu(custom_menu)
+
+        calculate_snr_menu_action = QAction("Calculate SNR", self)
+
+        clear_submenu.setTitle("remove plots")
+        custom_menu.addMenu(clear_submenu)
+    
+        custom_menu.addAction(calculate_snr_menu_action)
+
+        action_clear_all = QAction("clear all", self)
+
+        clear_submenu.addAction(action_clear_all)
+        #clear_submenu.addAction(action_clear_s)
+
+        action_clear_all.triggered.connect(self.display_image_widget.clearAlldisplayedImages)
+
+        pos = self.mapToGlobal(pos)
+        custom_menu.move(pos)
+        custom_menu.show() 
 
     def makeSignalSlotConnection(self):
 
         self.sample_image_selection_widget.sendImageNameandPath.connect(self.startFaceWorkerProcess)
+        self.customContextMenuRequested.connect(self.context_menu_method)
     
     @pyqtSlot()
     def noFaceDetected(self):
@@ -109,15 +136,14 @@ class IdCardPhotoAnalyser(QMainWindow):
         print("use cuda", use_cuda)
         self.ui.statusbar.showMessage(use_cuda )
         
-        model = UnetModel(Res34BackBone(), use_cuda)
-        nearestBox = NearestBox(distance_thresh = neighbor_box_distance, draw_line=False)
+        model = UnetModel(Res34BackBone(), use_cuda) # id card segmentation model
+        nearestBox = NearestBox(distance_thresh = neighbor_box_distance, draw_line=False) # Box finder
 
-        Image2Text = extract_words.ocr_factory(ocr_method = ocr_method, border_thresh=3, denoise = False)
+        Image2Text = extract_words.ocr_factory(ocr_method = ocr_method, border_thresh=3, denoise = False) # ocr features
         #Image2Text =  OcrFactory().select_ocr_method(ocr_method = ocr_method, border_thresh=3, denoise = False)
         
         self.ocrWorker = OcrWorker(model, nearestBox,  Image2Text, result_img)
         self.ocrWorker.moveToThread(self.threadOcr)
-
         self.threadOcr.started.connect(self.ocrWorker.run)
 
         self.ocrWorker.ocr_finished_signal.connect(self.threadOcr.quit)
@@ -127,10 +153,11 @@ class IdCardPhotoAnalyser(QMainWindow):
         self.ocrWorker.imshowHeatMapImage.connect(self.display_image_widget.displayHeatMapImage)
         self.ocrWorker.imshowMaskImage.connect(self.display_image_widget.displayMaskImage)
         self.ocrWorker.imshowMatchedImage.connect(self.display_image_widget.displayMatchedImage)
+        self.ocrWorker.imshowAllBoxImage.connect(self.display_image_widget.displayAllBoxImage)
         self.ocrWorker.sendOcrOutput.connect(self.ocr_output_widget.receiveOcrOutputs)
         self.ocrWorker.sendNoFaceDetectedSignal.connect(self.noFaceDetected)
         self.ocrWorker.sendOrientationAngleSignal.connect(self.ocr_output_widget.receiveOrientationAngleofIdCard)
-            
+        
         message_to_ui = "ocr method: "+ str(ocr_method) 
         self.ui.statusbar.showMessage(message_to_ui,6000)
         self.threadOcr.start()

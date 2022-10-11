@@ -13,6 +13,8 @@ from matplotlib.ticker import (MultipleLocator, MaxNLocator, AutoMinorLocator)
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_qt5agg import (NavigationToolbar2QT as NavigationToolbar)
 import cv2
+import numpy as np
+
 
 class DisplayImageWidget(QWidget):
 
@@ -28,6 +30,7 @@ class DisplayImageWidget(QWidget):
         self.mask_img = None
         self.final_img = None
         self.face_img = None
+        self.final_img_all_box = None
 
         gs = self.figure.add_gridspec(3,5)
         self.ax1 = self.figure.add_subplot(gs[0,0])
@@ -35,7 +38,8 @@ class DisplayImageWidget(QWidget):
         self.ax3 = self.figure.add_subplot(gs[0,2])
         self.ax4 = self.figure.add_subplot(gs[0,3])
         self.ax5 = self.figure.add_subplot(gs[0,4])
-        self.ax6 = self.figure.add_subplot(gs[1:,:-3])
+        self.ax6 = self.figure.add_subplot(gs[1:,:3])
+        self.ax7 = self.figure.add_subplot(gs[1:,3:])
         vertical_layout = QVBoxLayout()
         
         vertical_layout.addWidget(self.canvas)
@@ -110,6 +114,40 @@ class DisplayImageWidget(QWidget):
         self.ax6.set_axis_off()
         self.canvas.draw()
     
+    def displayAllBoxImage(self, image, img_name, bboxes):
+        for rct in bboxes:
+            x1, w, y1, h = rct
+            cv2.rectangle(image, (x1, y1), (x1+w, y1+h), (255,0,0), 1)
+            cX = round(int(x1) + w/2.0)
+            cY = round(int(y1) + h/2.0)
+            cv2.circle(image, (cX, cY), 3, (0, 255, 0), -1)
+        
+        self.final_img_all_box = image
+        self.ax7.set_title(img_name)
+        self.ax7.imshow(image)
+        plt.show()
+        self.ax7.set_axis_off()
+        self.canvas.draw()
+
+    @pyqtSlot()
+    def clearAlldisplayedImages(self):
+
+        empty_data = np.zeros((4,4))
+        self.ax1.clear()
+        self.ax2.clear()
+        self.ax3.clear()
+        self.ax4.clear()
+        self.ax5.clear()
+        self.ax6.clear()
+        self.displayFaceImage(empty_data,"")
+        self.displayOriginalImage(empty_data, "")
+        self.displayRotatedImage(empty_data,"")
+        self.displayHeatMapImage(empty_data,"")
+        self.displayMaskImage(empty_data,"")
+        self.displayMatchedImage(empty_data,"","")
+        self.displayAllBoxImage(empty_data,"","")
+        
+    
     
     """
     Show figure as a seperated image in matplotlib function
@@ -149,6 +187,10 @@ class DisplayImageWidget(QWidget):
             elif plotIndex  == 5:
                 fig, ax = plt.subplots(figsize=(16, 16))
                 ax.imshow(self.final_img)
+                ax.set_axis_off()
+            elif plotIndex  == 6:
+                fig, ax = plt.subplots(figsize=(16, 16))
+                ax.imshow(self.final_img_all_box)
                 ax.set_axis_off()
 
         
