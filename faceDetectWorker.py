@@ -62,7 +62,7 @@ class FaceDetectWorker(QRunnable):
         self.signals.result.emit(final_img)  # Return the result of the processing
 
         ## Send cropped image to mpl widget
-        self.signals.imshowRotatedImage.emit(final_img, "Warped Image")
+        self.signals.imshowRotatedImage.emit(final_img.copy(), "Warped Image")
         
         ## Crop face image and send to mpl widget
         face_cord_in =  self.fn.cropFace(final_img)

@@ -117,7 +117,7 @@ class OcrWorker(QObject):
 
         self.imshowMatchedImage.emit(final_img, "Final Image", new_bboxes)
             
-        self.imshowAllBoxImage.emit(final_img, "All text Box Image", bbox_coordinates)
+        self.imshowAllBoxImage.emit(final_img.copy(), "All text Box Image", bbox_coordinates)
         
         print("Time in seconds:",end -start)
         self.ocr_finished_signal.emit()
