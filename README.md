@@ -1,5 +1,7 @@
 
 # Identity Card Anaylysis Tool
+
+In this study, a gui was designed with the pyqt framework, this gui contains many networks to extract the information on the id card. The id card image is first detected by image processing techniques, then it is sent to the character density map and the unet model is run on the character outputs and the relevant parts are extracted.
 ### Arguments
 * `--folder_name`: folder path
 * `--neighbor_box_distance`: Nearest box distance 
