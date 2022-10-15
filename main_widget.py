@@ -90,12 +90,12 @@ class IdCardPhotoAnalyser(QMainWindow):
 
         clear_submenu = QMenu(custom_menu)
 
-        calculate_snr_menu_action = QAction("Calculate SNR", self)
+        #calculate_snr_menu_action = QAction("Calculate SNR", self)
 
         clear_submenu.setTitle("remove plots")
         custom_menu.addMenu(clear_submenu)
     
-        custom_menu.addAction(calculate_snr_menu_action)
+        #custom_menu.addAction(calculate_snr_menu_action)
 
         action_clear_all = QAction("clear all", self)
 
